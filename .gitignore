@@ -7,3 +7,10 @@ hostfile
 homework/common/fox
 homework/common/myallgather
 homework/common/server
+homework/group/14-1-KMP/gen_ped
+homework/group/14-1-KMP/kmp
+homework/group/14-1-KMP/match_result
+homework/group/18-1-transpose/gen_matrix
+homework/group/18-1-transpose/transpose
+homework/group/18-1-transpose/dataIn_bk.txt
+homework/group/22-2-dwt/dwt
