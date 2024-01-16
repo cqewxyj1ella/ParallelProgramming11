@@ -4,3 +4,6 @@ source
 mpi_demo
 omp_demo
 hostfile
+homework/common/fox
+homework/common/myallgather
+homework/common/server
