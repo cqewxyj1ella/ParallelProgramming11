@@ -4,9 +4,11 @@ source
 mpi_demo
 omp_demo
 hostfile
+
 homework/common/fox
 homework/common/myallgather
 homework/common/server
+
 homework/group/MPI/14-1-KMP/gen_ped
 homework/group/MPI/14-1-KMP/kmp
 homework/group/MPI/14-1-KMP/match_result
@@ -19,6 +21,6 @@ homework/group/MPI/22-2-dwt/gen
 homework/group/OpenMP/transpose-omp/gen_matrix
 homework/group/OpenMP/transpose-omp/transpose
 homework/group/OpenMP/transpose-omp/dataIn_bk.txt
-# homework/group/OpenMP/dwt-omp/dwt
-# homework/group/OpenMP/dwt-omp/gen
-homework/group/OpenMP/dwt-omp
+homework/group/OpenMP/dwt-omp/dwt
+homework/group/OpenMP/dwt-omp/gen
+# homework/group/OpenMP/dwt-omp
