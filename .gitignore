@@ -15,3 +15,10 @@ homework/group/MPI/18-1-transpose/transpose
 homework/group/MPI/18-1-transpose/dataIn_bk.txt
 homework/group/MPI/22-2-dwt/dwt
 homework/group/MPI/22-2-dwt/gen
+
+homework/group/OpenMP/transpose-omp/gen_matrix
+homework/group/OpenMP/transpose-omp/transpose
+homework/group/OpenMP/transpose-omp/dataIn_bk.txt
+# homework/group/OpenMP/dwt-omp/dwt
+# homework/group/OpenMP/dwt-omp/gen
+homework/group/OpenMP/dwt-omp
