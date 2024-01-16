@@ -3,45 +3,45 @@
 #include "mpi.h"
 
 #define  MAX_PROCESSOR_NUM       12
-#define  MAX_N                 1024
-#define  MAX_L                  100
+#define  MAX_N                 2048*2048
+#define  MAX_L                  100*100
 
 void print(int b[], int start, int len)
 {
-    int end = start+len;
+    int end = start + len;
     int i;
 
-    for(i = start; i < end; i ++)
+    for (i = start; i < end; i++)
     {
-        printf("%d  ",b[i]);
+        printf("%d  ", b[i]);
     }
     printf("\n");
 
 }
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
     int c[MAX_N], d[MAX_N];
     int h[MAX_L], g[MAX_L];
     int pred[MAX_N], curr[MAX_N];
-    int N,L;
-    FILE *fin;
+    int N, L;
+    FILE* fin;
     int n;
     int offsetAddress;
     int t;
     int i, j, k;
     int size, rank;
-    double  transTime = 0 ,tempCurrentTime, beginTime;
-
+    double  time1, time2, beginTime;
+    beginTime = MPI_Wtime();
     MPI_Status status;
 
     MPI_Init(&argc, &argv);
-    MPI_Comm_size(MPI_COMM_WORLD,&size);
-    MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    if(rank == 0)
+    if (rank == 0)
     {
-        fin = fopen("dataIn.txt","r");
+        fin = fopen("dataIn.txt", "r");
         if (fin == NULL)
         {
             puts("Not find input data file");
@@ -58,32 +58,54 @@ int main(int argc, char *argv[])
         else
         {
             /* read array h,g from dataIn.txt */
-            fscanf(fin,"%d",&L);
-            if ((L < 1)||(L > MAX_L))
+            // fscanf(fin, "%d", &L);
+            // if ((L < 1) || (L > MAX_L))
+            // {
+            //     puts("Input the length of array h is out of range!");
+            //     exit(-1);
+            // }
+            // for (i = 0; i < L; i++)
+            //     fscanf(fin, "%d", h + i);
+            // for (i = 0; i < L; i++)
+            //     fscanf(fin, "%d", g + i);
+            // use fread to read array h, g from dataIn.txt
+            fread(&L, sizeof(int), 1, fin);
+            if ((L < 1) || (L > MAX_L))
             {
                 puts("Input the length of array h is out of range!");
                 exit(-1);
             }
-            for(i = 0; i < L; i ++) fscanf(fin,"%d", h+i);
-            for(i = 0; i < L; i ++) fscanf(fin,"%d", g+i);
+            fread(h, sizeof(int), L, fin);
+            fread(g, sizeof(int), L, fin);
 
             /* read array c from dataIn.txt */
-            fscanf(fin,"%d",&N);
-            if ((N < 1)||(N > MAX_N))
+            // fscanf(fin, "%d", &N);
+            // if ((N < 1) || (N > MAX_N))
+            // {
+            //     puts("Input the length of array c is out of range!");
+            //     exit(-1);
+            // }
+            // for (i = 0; i < N; i++)
+            //     fscanf(fin, "%d", pred + i);
+            /* if  2^(t-1) < N < 2^t , then attach zero to expend N to 2^t */
+            // use fread to read array pred from dataIn.txt
+            fread(&N, sizeof(int), 1, fin);
+            if ((N < 1) || (N > MAX_N))
             {
                 puts("Input the length of array c is out of range!");
                 exit(-1);
             }
-            for(i = 0; i < N; i ++) fscanf(fin,"%d", pred+i);
-            /* if  2^(t-1) < N < 2^t , then attach zero to expend N to 2^t */
+            fread(pred, sizeof(int), N, fin);
 
             puts("One dimensional wavelet transform\'s input data from file dataIn.txt");
-            printf("h[] : ");
-            print(h, 0, L);
-            printf("g[] : ");
-            print(g, 0, L);
-            printf("c[] : ");
-            print(pred, 0, N);
+            // printf("h[] : ");
+            // print(h, 0, L);
+            // printf("g[] : ");
+            // print(g, 0, L);
+            // printf("c[] : ");
+            // print(pred, 0, N);
+            printf("h[] and g[]'s length: %d\n", L);
+            printf("c[]'s length: %d\n", N);
             printf("\n");
         }
     }
@@ -92,70 +114,80 @@ int main(int argc, char *argv[])
     MPI_Bcast(&L, 1, MPI_INT, 0, MPI_COMM_WORLD);
     MPI_Bcast(h, L, MPI_INT, 0, MPI_COMM_WORLD);
     MPI_Bcast(g, L, MPI_INT, 0, MPI_COMM_WORLD);
+    time1 = MPI_Wtime();
 
     n = N;
     offsetAddress = 0;
     t = 0;
-    while(n > 1)
+    while (n > 1)
     {
         MPI_Bcast(pred, n, MPI_INT, 0, MPI_COMM_WORLD);
-        n /=2;
+        n /= 2;
 
-        int jLength =  n/size;
-        int jStart  =  n%size+rank*jLength;
+        int jLength = n / size;
+        int jStart = n % size + rank * jLength;
 
         if (rank == 0)
         {
-            for(j = 0; j < jStart+jLength; j ++)
+            for (j = 0; j < jStart + jLength; j++)
             {
                 curr[j] = 0;
-                d[offsetAddress+j] = 0;
-                for(k = 0; k < L; k ++)
+                d[offsetAddress + j] = 0;
+                for (k = 0; k < L; k++)
                 {
-                    curr[j] += h[k]*pred[(2*j+k)%(2*n)];
-                    d[offsetAddress+j] += g[k]*pred[(2*j+k)%(2*n)];
+                    curr[j] += h[k] * pred[(2 * j + k) % (2 * n)];
+                    d[offsetAddress + j] += g[k] * pred[(2 * j + k) % (2 * n)];
                 }
             }
             /* curr[0 .. jStart-1] ==> pred[0 .. jStart-1] */
-            for(j = 0; j < jStart; j ++) pred[j] = curr[j];
+            for (j = 0; j < jStart; j++) pred[j] = curr[j];
         }
         else
         {
-            for(j = jStart; j < jStart+jLength; j ++)
+            for (j = jStart; j < jStart + jLength; j++)
             {
                 curr[j] = 0;
-                d[offsetAddress+j] = 0;
-                for(k = 0; k < L; k ++)
+                d[offsetAddress + j] = 0;
+                for (k = 0; k < L; k++)
                 {
-                    curr[j] += h[k]*pred[(2*j+k)%(2*n)];
-                    d[offsetAddress+j] += g[k]*pred[(2*j+k)%(2*n)];
+                    curr[j] += h[k] * pred[(2 * j + k) % (2 * n)];
+                    d[offsetAddress + j] += g[k] * pred[(2 * j + k) % (2 * n)];
                 }
             }
         }
 
         /* gather into &(pred+jStart) */
-        MPI_Gather( (curr+jStart), jLength, MPI_INT, (pred+n%size), jLength, MPI_INT, 0, MPI_COMM_WORLD);
-        MPI_Gather( (d+offsetAddress+jStart),jLength, MPI_INT, (d+offsetAddress+jStart), jLength, MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_Gather((curr + jStart), jLength, MPI_INT, (pred + n % size), jLength, MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_Gather((d + offsetAddress + jStart), jLength, MPI_INT, (d + offsetAddress + jStart), jLength, MPI_INT, 0, MPI_COMM_WORLD);
 
         /* store in c[] */
         if (rank == 0)
         {
-            for(j = 0, k = offsetAddress; j < n;  j++, k ++) c[k] = pred[j];
+            for (j = 0, k = offsetAddress; j < n; j++, k++) c[k] = pred[j];
         }
 
         if (rank == 0)
         {
-            t ++;
+            t++;
             printf("Running after loop  %d\n", t);
-            printf("c[] : ");
-            print(c, offsetAddress, n);
-            printf("d[] : ");
-            print(d, offsetAddress, n);
-            printf("\n");
+            // printf("c[] : ");
+            // print(c, offsetAddress, n);
+            // printf("d[] : ");
+            // print(d, offsetAddress, n);
+            // printf("\n");
         }
         offsetAddress += n;
 
     }
-
+    time2 = MPI_Wtime();
+    /* If the current process is rank 0, print timing information */
+    if (rank == 0)
+    {
+        printf("\n");
+        printf("Whole running time    = %f seconds\n", time2 - beginTime);
+        printf("Distribute data time  = %f seconds\n", time1 - beginTime);
+        printf("Parallel compute time = %f seconds\n", time2 - time1);
+    }
+    MPI_Barrier(MPI_COMM_WORLD);
     MPI_Finalize();
 }
